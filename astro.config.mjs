@@ -9,6 +9,8 @@ export default defineConfig({
       description: 'Swap, discover new pairs and bridge USDC on Arc.',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/covennetwork' }],
       editLink: { baseUrl: 'https://github.com/covennetwork/docs/edit/main/' },
+      logo:{src: './public/logo.svg'},
+      favicon:'/favicon.ico',
       customCss: ['./src/styles/coven.css'],
       sidebar: [
         { label: 'Start here', items: ['quickstart', 'arc'] },
