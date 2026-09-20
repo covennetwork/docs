@@ -1,0 +1,38 @@
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #1c1c1c;
+  --sl-color-accent: #ffffff;
+  --sl-color-accent-high: #ffffff;
+  --sl-color-text-accent: #ffffff;
+  --sl-color-bg: #000000;
+  --sl-color-bg-nav: #000000;
+  --sl-color-bg-sidebar: #000000;
+  --sl-color-hairline: #1f1f1f;
+  --sl-color-hairline-light: #262626;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e8e8e8;
+  --sl-color-accent: #000000;
+  --sl-color-accent-high: #000000;
+  --sl-color-text-accent: #000000;
+}
+
+.site-title {
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 0.98;
+}
+
+.hero .tagline {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+}

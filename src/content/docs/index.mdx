@@ -1,0 +1,42 @@
+---
+title: Coven
+description: Swap, find new pairs and bridge USDC on Arc.
+template: splash
+hero:
+  tagline: Swap on Arc, watch new pairs appear, and move USDC across chains.
+  actions:
+    - text: Quickstart
+      link: /quickstart/
+      icon: right-arrow
+    - text: SDK reference
+      link: /reference/sdk/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+Coven routes trades across Uniswap v3 and v4 pools on [Arc](/arc/), Circle's chain where gas is paid in USDC. It finds the best route across every pool for a pair, shows new pools within seconds of their creation, and moves USDC to and from ten other chains through Circle's CCTP.
+
+<CardGrid>
+  <Card title="One line to quote" icon="rocket">
+    `createCoven().quote({ tokenIn, tokenOut, amountIn })` prices a trade across v3 and v4, after fees.
+  </Card>
+  <Card title="New pairs, live" icon="star">
+    Watch pools as they are created, with lookalike tokens flagged.
+  </Card>
+  <Card title="USDC in and out" icon="random">
+    Bridge with Circle's Forwarding Service, including gas paid in USDC on the source chain.
+  </Card>
+  <Card title="Built on viem" icon="seti:typescript">
+    Works with every wagmi connector, in browsers and in Node.
+  </Card>
+</CardGrid>
+
+## Where to go next
+
+- **Trying it out?** Start with the [quickstart](/quickstart/).
+- **Building an app on Coven?** Read [for integrators](/guides/integrators/) and [fees](/guides/fees/).
+- **Looking for a specific function?** The [SDK reference](/reference/sdk/) lists all of them.
+- **Reviewing the contracts?** [Contracts](/reference/contracts/) covers the addresses and what the owner can do.
+
+The Coven contracts have not been audited.
