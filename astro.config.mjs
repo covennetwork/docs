@@ -23,6 +23,14 @@ export default defineConfig({
           items: ['guides/integrators', 'guides/fees', 'guides/production'],
         },
         {
+          label: 'Arbitrage',
+          items: ['arbitrage/overview', 'arbitrage/contract', 'arbitrage/cli'],
+        },
+        {
+          label: 'MCP',
+          items: ['mcp/read', 'mcp/write'],
+        },
+        {
           label: 'Reference',
           items: ['reference/sdk', 'reference/errors', 'reference/contracts', 'reference/chains'],
         },

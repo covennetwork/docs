@@ -54,3 +54,9 @@ A v4 pool can attach a hook, and a hook with swap permissions can change what a 
 | Uniswap SwapRouter02 | `0x53BF6B0684Ec7eF91e1387Da3D1a1769bC5A6F77` |
 | Uniswap v4 PoolManager | `0x8366a39CC670B4001A1121B8F6A443A643e40951` |
 | CCTP TokenMessengerV2 | `0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d` |
+
+## Sibling deployments
+
+Two contracts sit beside the retail router and do not change it. Both are unaudited.
+
+`CovenArb` runs atomic arbitrage. It is deployed separately with a zero fee and holds no funds between transactions. See [the arbitrage contract](/arbitrage/contract/). `CovenSession` bounds an agent's spending on chain for the MCP write path, and every session is created through a `CovenSessionFactory` that pins the canonical router and lens so a lookalike cannot pass. See [sessions](/mcp/write/). A session trades only pairs with USDC on one side, so its caps stay measurable; it cannot trade token to token. Their addresses are recorded here and in the packages once each is deployed.
