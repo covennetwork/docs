@@ -57,4 +57,4 @@ Coven's router emits `Swapped` and `Bridged`, and configuration changes emit the
 - Check that your interface leaves USDC behind for gas.
 - Confirm lookalike warnings appear in your token picker.
 - Pin the SDK version and read the changelog before upgrading.
-- Remember the contracts are unaudited, and say so where users can see it.
+- The contracts have had an internal security review — see [the security assessment](/reference/security-review/).

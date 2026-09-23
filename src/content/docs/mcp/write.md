@@ -5,7 +5,7 @@ description: A bounded, session-gated write path where authority lives in a cont
 
 The write path lets an agent spend, so its threat model is prompt injection, not user error. A user who sets loose limits and loses money made a choice. A user whose agent read an instruction out of a token name did not. The bounds exist so an instruction injected through attacker-controlled data cannot exceed what the user already authorized out of band. They do not restrict what the user can choose to authorize.
 
-The arb path and this session path are unaudited. `CovenSession` is the contract standing between an attacker-controlled string and a balance, so review it first.
+`CovenSession` is the contract standing between an attacker-controlled string and a balance, so review it first. It was covered by [the September 2026 security assessment](/reference/security-review/), which found and fixed a flaw in exactly that boundary.
 
 ## Authority lives in the contract
 
@@ -15,13 +15,21 @@ The session key that the server holds is a hot key. It can trade within the caps
 
 ## Slippage is measured against the simulation
 
-The session takes the expected output from the simulation step and enforces the trade against it: the realized output must be within the slippage bound of what the simulation saw. The server fills that value from the simulation handle, so the model never chooses it. This is what makes the slippage bound mean something. Enforcing it against a fresh quote taken in the same transaction as the swap would bound the gap between a quote and its own execution, which is zero by construction, and would let someone who moves the price first walk the trade down with it.
+The session enforces two floors and takes the stricter one.
+
+The first comes from the simulation step: the realized output must be within the slippage bound of what the simulation saw. The server fills that value from the simulation handle, so the model never chooses it. A fresh quote taken in the same transaction as the swap cannot do this job, because it bounds the gap between a quote and its own execution, which is zero by construction, and someone who moves the price first would walk the trade down with it.
+
+The second comes from a quote the contract takes itself, in the same transaction, bounded by the same slippage setting. On its own it is the weak bound just described. Its job is different: it stops a caller from supplying an expected output far below the truth and buying a worthless fill. Without it the slippage ceiling is only as honest as whoever fills in the number, which means a compromised or prompt-injected server could trade a balance away inside caps that all still read correctly. The review found the session in exactly that state and it was fixed before this deployment.
+
+Neither floor subsumes the other. The caller can always ask for a tighter one and never a looser one.
 
 ## Sessions are created through a factory
 
-A session is a per-user contract that the user approves tokens to, which makes a lookalike a phishing target. `CovenSessionFactory` is the trust anchor: it creates every session through CREATE2 keyed on the owner and pins the canonical router and lens, so a factory-created session always points at the real contracts. The MCP server refuses any session the factory did not create. Verify a session with `factory.isSession(address)` before approving tokens to it.
+A session is a per-user contract that the user approves tokens to, which makes a lookalike a phishing target. `CovenSessionFactory` is the trust anchor: it creates every session through CREATE2 keyed on the owner and pins the canonical router and lens, so a factory-created session always points at the real contracts. The factory is at `0xC7d8306A78e91d0C4fA0e5Ad6D1278A73767b057`, and `@covennetwork/core` exports it as `COVEN_SESSION_FACTORY`. The MCP server refuses any session the factory did not create. Verify a session with `factory.isSession(address)` before approving tokens to it.
 
-Creating a session is one transaction the owner sends with their own wallet, `factory.create`, from the app. There is no per-user contract to deploy and no script to run: the factory is deployed once, and each session is a normal wallet call after that. The `@covennetwork/mcp` package exports `createSession` and `predictSession` for the app to wire behind a button, and `predictSession` returns the address in advance so the UI can show it before the user signs.
+A session belongs to whoever sent the transaction that created it, so nobody can create one in your name. `create` takes the configuration and a salt; there is no owner argument to get wrong.
+
+Creating a session is one transaction the owner sends with their own wallet, `factory.create`, from the app. There is no per-user contract to deploy and no script to run: the factory is deployed once, and each session is a normal wallet call after that. The connected wallet has to be the intended owner, and `createSession` refuses to send if it is not. The `@covennetwork/core` package exports `createSession` and `predictSession` (the app and the MCP server both use them) for the app to wire behind a button, and `predictSession` returns the address in advance so the UI can show it before the user signs.
 
 ## Tools
 

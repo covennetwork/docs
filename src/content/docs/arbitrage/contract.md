@@ -3,9 +3,14 @@ title: The arbitrage contract
 description: How CovenArb executes a plan, and the single check that protects the callback.
 ---
 
-`CovenArb` is a sibling of the retail router, deployed separately and with the opposite security posture. It is unaudited.
+`CovenArb` is a sibling of the retail router, deployed separately and with the opposite security posture. It was covered by [the September 2026 security assessment](/reference/security-review/).
 
-The address is recorded here once the contract is deployed with `feeBps = 0`. Until then, pass the address explicitly to the SDK and CLI.
+| | |
+| --- | --- |
+| Address | `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e` |
+| Fee | 10% of realized profit |
+
+`@covennetwork/arb` exports it as `COVEN_ARB` and uses it by default. Pass `arb` to `createCovenArb` to point at a different deployment.
 
 ## Execution
 
@@ -22,10 +27,14 @@ At the end the contract reads its own profit-token delta, requires it to be posi
 
 ## Fees and bounds
 
-The fee is taken off the measured profit before the caller is paid, as an ERC-6909 claim minted inside the PoolManager rather than a transfer to an external address. A blocklisted or reverting fee recipient therefore cannot kill an otherwise profitable arb. The contract ships with `feeBps = 0`.
+The fee is taken off the measured profit before the caller is paid, as an ERC-6909 claim minted inside the PoolManager rather than a transfer to an external address. A blocklisted or reverting fee recipient therefore cannot kill an otherwise profitable arb. The deployment keeps 10% of realized profit, and the owner can change that within a 20% cap.
+
+Every plan names the highest fee it will accept in `maxFeeBps`, and execution reverts if the contract's fee is above it. A fee raised after you signed cannot reprice a transaction still in the mempool. `buildPlan` defaults it to the contract's own 20% cap; pass something lower to refuse a raise.
+
+Redeeming the accrued claims means calling the PoolManager inside an unlock, so the fee recipient has to be an address that can do that.
 
 Each leg carries a price limit. It bounds a hostile hook and also bounds gas, since a leg that exhausts liquidity would otherwise walk ticks toward the extreme price and burn far more gas than the trade is worth.
 
 ## Deploying
 
-Use the guarded deploy script in the contracts repository. It refuses the wrong chain, refuses a non-contract owner unless explicitly overridden, and verifies the configuration after deployment. Deploy with `feeBps = 0` and run it with a small balance first.
+Use the guarded deploy script in the contracts repository, or `deploy-all.sh` at its root to deploy the whole stack in order. It refuses the wrong chain, refuses a non-contract owner unless explicitly overridden, refuses a zero fee, and verifies the configuration after deployment. Run it with a small balance first.

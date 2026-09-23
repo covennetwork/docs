@@ -9,7 +9,7 @@ export default defineConfig({
       description: 'Swap, discover new pairs and bridge USDC on Arc.',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/covennetwork' }],
       editLink: { baseUrl: 'https://github.com/covennetwork/docs/edit/main/' },
-      logo:{src: './public/logo.svg'},
+      logo: { src: './public/logo.png', alt: 'Coven' },
       favicon:'/favicon.ico',
       customCss: ['./src/styles/coven.css'],
       sidebar: [
@@ -20,7 +20,7 @@ export default defineConfig({
         },
         {
           label: 'Integrating',
-          items: ['guides/integrators', 'guides/fees', 'guides/production'],
+          items: ['guides/widget', 'guides/integrators', 'guides/fees', 'guides/production'],
         },
         {
           label: 'Arbitrage',
@@ -32,7 +32,7 @@ export default defineConfig({
         },
         {
           label: 'Reference',
-          items: ['reference/sdk', 'reference/errors', 'reference/contracts', 'reference/chains'],
+          items: ['reference/sdk', 'reference/errors', 'reference/contracts', 'reference/security-review', 'reference/chains'],
         },
       ],
     }),

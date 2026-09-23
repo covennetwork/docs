@@ -1,3 +1,27 @@
+/* Matches the Coven app: paper (#EFECE4) with black ink in light mode, its dark counterpart
+   in dark mode. The app logo is black line art on transparent, so it sits directly on paper
+   and is inverted to white for the dark theme. */
+
+:root[data-theme='light'] {
+  --sl-color-bg: #efece4;
+  --sl-color-bg-nav: #efece4;
+  --sl-color-bg-sidebar: #efece4;
+  --sl-color-bg-inline-code: #e3decf;
+  --sl-color-bg-gutter: #e6e1d6;
+
+  --sl-color-text: #1a1917;
+  --sl-color-white: #000000;
+
+  --sl-color-accent-low: #e0dacb;
+  --sl-color-accent: #000000;
+  --sl-color-accent-high: #000000;
+  --sl-color-text-accent: #000000;
+
+  --sl-color-hairline: rgba(0, 0, 0, 0.09);
+  --sl-color-hairline-light: rgba(0, 0, 0, 0.14);
+  --sl-color-hairline-shade: rgba(0, 0, 0, 0.05);
+}
+
 :root[data-theme='dark'] {
   --sl-color-accent-low: #1c1c1c;
   --sl-color-accent: #ffffff;
@@ -10,11 +34,20 @@
   --sl-color-hairline-light: #262626;
 }
 
-:root[data-theme='light'] {
-  --sl-color-accent-low: #e8e8e8;
-  --sl-color-accent: #000000;
-  --sl-color-accent-high: #000000;
-  --sl-color-text-accent: #000000;
+/* White text on inverted-black selection, as in the app. */
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* The app logo is a near-square mark; keep it tidy in the nav and invert it for dark. */
+.site-title img {
+  height: 2rem;
+  width: auto;
+}
+
+:root[data-theme='dark'] .site-title img {
+  filter: invert(1);
 }
 
 .site-title {

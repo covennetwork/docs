@@ -5,7 +5,7 @@ description: An atomic single-chain arbitrage executor, the sizing solver behind
 
 Coven ships an atomic arbitrage path on Arc alongside the retail router. It is a sibling deployment, `CovenArb`, and it never touches `CovenRouter`. The retail router is unchanged by any of this.
 
-The arb path is unaudited. Keep approvals scoped and balances small.
+The arb path was covered by [the September 2026 security assessment](/reference/security-review/). Keep approvals scoped and balances small.
 
 ## What it is
 
@@ -27,4 +27,4 @@ Within a tick range a pool is constant product with virtual reserves, so the opt
 
 ## Contracts
 
-`CovenArb` is deployed separately from the retail contracts. See [the arbitrage contract](/arbitrage/contract/) for the execution flow and the checks that protect the callback. The command line tool that runs the solver is described in [the CLI](/arbitrage/cli/).
+`CovenArb` is deployed separately from the retail contracts, at `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e`. See [the arbitrage contract](/arbitrage/contract/) for the execution flow and the checks that protect the callback. The command line tool that runs the solver is described in [the CLI](/arbitrage/cli/).

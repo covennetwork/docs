@@ -3,7 +3,7 @@ title: For integrators
 description: Put Coven in your own app, and earn a fee while doing it.
 ---
 
-Coven is a package, not a widget. You build the interface; the SDK handles routing, fees, discovery and bridging.
+Coven is a package: you build the interface, and the SDK handles routing, fees, discovery and bridging. If you'd rather not build anything, the [swap widget](/guides/widget/) drops the whole experience into your site with one script tag.
 
 ## Set up an instance
 
