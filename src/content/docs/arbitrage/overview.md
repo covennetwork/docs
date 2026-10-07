@@ -1,6 +1,6 @@
 ---
 title: Arbitrage on Arc
-description: An atomic single-chain arbitrage executor, the sizing solver behind it, and what the measurement found.
+description: An atomic single-chain arbitrage executor, how the solver prices trades on-chain, and what the measurement found.
 ---
 
 Coven ships an atomic arbitrage path on Arc alongside the retail router. It is a sibling deployment, `CovenArb`, and it never touches `CovenRouter`. The retail router is unchanged by any of this.
@@ -21,9 +21,15 @@ Arc orders transactions within a block by descending priority fee. Over a sample
 
 On the public endpoint the observable opportunity set was close to empty. Launchpad tokens exist in large numbers, but most have a single USDC pool or duplicate pools with no liquidity, so there is nothing to arbitrage against. A real assessment needs a private endpoint and several days of collection. Run the measurement yourself before risking gas.
 
+Since then, competing bots have appeared. In a sample of about 50 minutes in October 2026, two contracts made over 30 closed-cycle trades between them. The faster one reacted within a block and bid around 20 gwei of priority fee on small trades, and 746 gwei on a three-leg trade that netted it 0.18 USDC. Speed and bid now matter as much as finding the opportunity.
+
 ## The solver
 
-Within a tick range a pool is constant product with virtual reserves, so the optimal trade size has a closed form. The solver sizes each opportunity against real depth rather than a mid-price gap, because a wide gap on a pool holding a few dollars is not a few dollars of profit. Where a hook can affect a swap, the closed form does not apply and the solver searches numerically against the on-chain simulator instead. Every result is checked against `CovenLens`, the same simulator the retail router prices against.
+Within a tick range a pool is constant product with virtual reserves, so a cycle's best trade size can be estimated in closed form. That estimate is only a starting point. It cannot see tick crossings, thin liquidity just past the current range, or fees a hook charges, and a wide gap on a pool holding a few dollars is not a few dollars of profit.
+
+The chain decides instead. `CovenArb` reverts with `BelowMinProfit(profit, minProfit)` when a plan is profitable but under its floor, so a plan with an unreachable floor returns its exact profit after every tick, hook and fee, including the contract's own cut. The solver simulates sixteen sizes around the estimate in a single Multicall3 call and takes the best. Nothing is sent that the chain has not priced.
+
+`CovenLens` is not used for discovery. It only knows hookless pools at standard fee tiers, which leaves out most of what trades on Arc. Pools are found from swap events instead, as described in [the CLI](/arbitrage/cli/#how-a-trade-is-found).
 
 ## Contracts
 

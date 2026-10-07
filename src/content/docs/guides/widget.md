@@ -74,6 +74,10 @@ Passing `token0` and `token1` alone locks the pair. Add the full key (`poolFee`,
 | `hooks`         | `string`              | Pool hooks address (`0x0…0` for none).                         |
 | `slippage`      | `number`              | Max slippage in basis points (default `50`).                   |
 | `bg`            | `string`              | Background color (hex, or `transparent`). Default `#EFECE4`.   |
+| `theme`         | `"light" \| "dark"`   | Ink palette. `dark` for dark hosts; defaults `bg` to `#0E0E0D`. |
+| `accent`        | `string`              | Hex color for the primary action.                              |
+| `compact`       | `boolean`             | Tighter spacing, smaller headings, no hero heading.            |
+| `onSwap`        | `(swap) => void`      | Called when a swap confirms. See [swap events](#swap-events).  |
 | `maxWidth`      | `number \| string`    | Max iframe width (default `460`).                              |
 | `origin`        | `string`              | Where the widget is hosted (default `https://coven.network`).  |
 | `className`     | `string`              | Passed to the iframe.                                          |
@@ -81,7 +85,7 @@ Passing `token0` and `token1` alone locks the pair. Add the full key (`poolFee`,
 
 ## Other sites
 
-Not on React? A script loader drops the same widget into any page — plain HTML, Vue, Webflow — with `data-*` attributes mirroring the props above (`data-integrator`, `data-pool`, `data-token0`, `data-slippage`, and so on):
+Not on React? A script loader drops the same widget into any page — plain HTML, Vue, Webflow — with `data-*` attributes mirroring the props above (`data-integrator`, `data-pool`, `data-token0`, `data-slippage`, `data-theme`, and so on; `data-compact` is a bare attribute):
 
 ```html
 <script
@@ -105,13 +109,36 @@ The iframe is inserted where the script tag sits, or into the element named by `
     if (e.data?.type === 'coven:resize') {
       /* set your iframe height to e.data.height */
     }
+    if (e.data?.type === 'coven:swap') {
+      /* show the trade: e.data.hash, e.data.amountOut, ... */
+    }
   })
 </script>
 ```
+
+## Swap events
+
+When a swap made in the widget confirms, the widget posts a `coven:swap` message to the host
+window, and the React component passes the same payload (without `type`) to `onSwap`:
+
+```ts
+{
+  type: 'coven:swap',
+  hash: '0x…',                 // transaction hash on Arc
+  side: 'buy',                 // relative to USDC: 'buy' paid USDC, 'sell' received it, else 'swap'
+  tokenIn: { address: '0x…', symbol: 'USDC', decimals: 6 },
+  tokenOut: { address: '0x…', symbol: 'TOKEN', decimals: 18 },
+  amountIn: '1000000',         // base units, as a decimal string
+  amountOut: '4213370000000000000',
+}
+```
+
+Without React, listen for it next to the resize message, and check `event.source` is the widget's
+iframe before trusting it.
 
 ## Good to know
 
 - The widget only swaps on Arc. If the user's wallet is on another network it prompts them to switch. Bridging between chains stays in the full [app](https://coven.network) and the [SDK](/guides/bridging/).
 - The integrator fee is validated against the router's cap; anything above it is clamped. See [fees](/guides/fees/).
-- `bg` only accepts a hex color or `transparent`; other values fall back to the brand color.
+- `bg` and `accent` only accept hex colors (`bg` also takes `transparent`); other values fall back to the theme's defaults.
 - Resolving a v4 pool by id depends on discovery, which can be slower on a public RPC. For a v4 pool you control, the explicit-tokens form is the more reliable choice.

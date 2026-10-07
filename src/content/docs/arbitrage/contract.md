@@ -10,7 +10,7 @@ description: How CovenArb executes a plan, and the single check that protects th
 | Address | `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e` |
 | Fee | 10% of realized profit |
 
-`@covennetwork/arb` exports it as `COVEN_ARB` and uses it by default. Pass `arb` to `createCovenArb` to point at a different deployment.
+`@covennetwork/arb` exports it as `COVEN_ARB` and uses it by default. The library's `probe` function takes an `arb` option to point at a different deployment.
 
 ## Execution
 
@@ -19,7 +19,7 @@ description: How CovenArb executes a plan, and the single check that protects th
 - A v4 leg calls `swap` on the PoolManager, which records the deltas without moving tokens.
 - A v3 leg syncs the output currency, swaps with the PoolManager as recipient, then settles, so the output lands as a credit. The input is paid just in time inside `uniswapV3SwapCallback`, where the contract takes it from the PoolManager and hands it straight to the pool.
 
-At the end the contract reads its own profit-token delta, requires it to be positive and at least `minProfit`, takes the fee as an ERC-6909 claim, and takes the rest to the caller. Every currency delta is zero at the end apart from the profit that was taken. The contract holds no token at any point.
+At the end the contract reads its own profit-token delta, requires it to be positive and at least `minProfit`, takes the fee as an ERC-6909 claim, and takes the rest to the caller. The payout is therefore a USDC transfer from the PoolManager, not from `CovenArb`. A plan whose `minProfit` is zero reverts with `ZeroMinProfit()`, and an empty or malformed plan with `InvalidPlan()`. Every currency delta is zero at the end apart from the profit that was taken. The contract holds no token at any point.
 
 ## The check that matters most
 
@@ -29,7 +29,7 @@ At the end the contract reads its own profit-token delta, requires it to be posi
 
 The fee is taken off the measured profit before the caller is paid, as an ERC-6909 claim minted inside the PoolManager rather than a transfer to an external address. A blocklisted or reverting fee recipient therefore cannot kill an otherwise profitable arb. The deployment keeps 10% of realized profit, and the owner can change that within a 20% cap.
 
-Every plan names the highest fee it will accept in `maxFeeBps`, and execution reverts if the contract's fee is above it. A fee raised after you signed cannot reprice a transaction still in the mempool. `buildPlan` defaults it to the contract's own 20% cap; pass something lower to refuse a raise.
+Every plan names the highest fee it will accept in `maxFeeBps`, and execution reverts if the contract's fee is above it. A fee raised after you signed cannot reprice a transaction still in the mempool. `buildPlan` takes it as a required argument, and the CLI pins it to the fee the contract charges when the bot starts, so a later raise makes trades revert rather than pay more.
 
 Redeeming the accrued claims means calling the PoolManager inside an unlock, so the fee recipient has to be an address that can do that.
 
