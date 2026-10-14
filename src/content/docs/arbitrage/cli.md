@@ -96,7 +96,7 @@ coven-arb run --log trades.jsonl
 3. **Screen.** Market events arrive over a websocket subscription as they happen, with an `eth_getLogs` poll behind it so no block is ever missed. Swap events carry the pool's new price and liquidity, so state stays exact. Cycles touched by new events, and all of them every 30 seconds, are priced from spot prices and LP fees.
 4. **Simulate.** Every candidate goes through `CovenProbe` in one round of calls against the latest block. The contract checks, sizes and trades each route, so the profit it reports is exact after every tick, hook and fee, and after its own cut.
 5. **Send.** A route whose profit beats its gas plus `--min-profit` is sent alone, signed locally and broadcast to every endpoint, at `--tip`. That cost goes along as the contract's profit floor: if someone else takes the gap first, the contract skips the trade and the send costs about 60k gas. A payout route also requires the hook to still hold at least half the inventory the bot saw.
-6. **Back off.** A route that missed sits out for 30 seconds, doubling with each consecutive miss up to 10 minutes.
+6. **Back off.** After a miss, every pool the route used sits out for 30 seconds, doubling with each consecutive miss up to 30 minutes, since many cycles share the same contested pools. Hook payout routes are exempt: their gate already makes a miss cheap.
 
 ## Why no bidding
 
