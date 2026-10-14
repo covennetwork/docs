@@ -3,20 +3,21 @@ title: Contracts
 description: Addresses, what the owner can do, and what protects users.
 ---
 
-Four contracts on Arc mainnet, chain 5042, deployed 23 September 2026.
+Contracts on Arc mainnet, chain 5042. The first three were deployed 23 September 2026, `CovenProbe` on 14 October 2026.
 
 | Contract | Address |
 | --- | --- |
 | CovenRouter | `0x5b86f1e5d95eFe358004B4484bF0a8C386c419a8` |
 | CovenLens | `0x098Bb65C8aBBfF80c91e2A72A4A1439D31770fed` |
 | CovenSessionFactory | `0xC7d8306A78e91d0C4fA0e5Ad6D1278A73767b057` |
-| CovenArb | `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e` |
+| CovenProbe | `0x179606809c8611BebFAC04357f0B4E0Fb8b6479E` |
+| CovenArb (deprecated) | `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e` |
 
-`CovenRouter` executes swaps and holds the settings. `CovenLens` prices routes and stores nothing; apps call it read-only. `CovenSessionFactory` creates the per-user session contracts the MCP write path uses. `CovenArb` runs atomic arbitrage and is independent of the other three.
+`CovenRouter` executes swaps and holds the settings. `CovenLens` prices routes and stores nothing; apps call it read-only. `CovenSessionFactory` creates the per-user session contracts the MCP write path uses. `CovenProbe` runs atomic arbitrage and is independent of the other three. `CovenArb` is its deprecated predecessor.
 
-`@covennetwork/core` exports all four as `COVEN_ROUTER`, `COVEN_LENS`, `COVEN_SESSION_FACTORY` and `COVEN_ARB`, and the SDK uses them by default. You should not need to paste an address anywhere.
+`@covennetwork/core` exports the router, lens, session factory and `CovenArb` as `COVEN_ROUTER`, `COVEN_LENS`, `COVEN_SESSION_FACTORY` and `COVEN_ARB`, and the SDK uses them by default. `@covennetwork/arb` exports `COVEN_PROBE`. You should not need to paste an address anywhere.
 
-These contracts were reviewed in September 2026 and the findings were fixed before this deployment. See [the security assessment](/reference/security-review/).
+The router, lens, session factory and `CovenArb` were reviewed in September 2026 and the findings were fixed before deployment. See [the security assessment](/reference/security-review/). `CovenProbe` has not had an external review yet.
 
 An earlier router and lens pair, deployed 19 September 2026 at `0xA13b8d54…` and `0xc041C074…`, is still on chain and still works, but it predates the review and should not be used. Nothing migrates automatically; point your integration at the addresses above.
 
@@ -77,4 +78,4 @@ Masking a constant means a matching hook may set it to anything. Registering a t
 
 `CovenSession` bounds an agent's spending on chain for the MCP write path. Every session is created through `CovenSessionFactory`, which pins the canonical router and lens so a lookalike cannot pass, and owns each session to whoever sent the creating transaction. A session trades only pairs with USDC on one side, so its caps stay measurable; it cannot trade token to token. See [sessions](/mcp/write/).
 
-`CovenArb` runs atomic arbitrage. It is permissionless, holds no funds between transactions, and keeps 10% of realized profit. It never touches `CovenRouter`. See [the arbitrage contract](/arbitrage/contract/).
+`CovenProbe` runs atomic arbitrage. It is permissionless, holds no funds between transactions, and keeps 10% of realized profit. It never touches `CovenRouter`. `CovenArb`, its predecessor, is deprecated: it still works but the arbitrage bot no longer uses it. See [the arbitrage contract](/arbitrage/contract/).

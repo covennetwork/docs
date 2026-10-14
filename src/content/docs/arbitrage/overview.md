@@ -1,36 +1,37 @@
 ---
 title: Arbitrage on Arc
-description: An atomic single-chain arbitrage executor, how the solver prices trades on-chain, and what the measurement found.
+description: An atomic single-chain arbitrage contract, how the bot finds and prices routes, and what a week of Arc data says about making money.
 ---
 
-Coven ships an atomic arbitrage path on Arc alongside the retail router. It is a sibling deployment, `CovenArb`, and it never touches `CovenRouter`. The retail router is unchanged by any of this.
+Coven ships an atomic arbitrage path on Arc alongside the retail router. It runs through `CovenProbe`, a sibling deployment that never touches `CovenRouter`. The retail router is unchanged by any of this.
 
-The arb path was covered by [the September 2026 security assessment](/reference/security-review/). Keep approvals scoped and balances small.
+`CovenProbe` replaced `CovenArb` in October 2026. `CovenArb` is deprecated: it still works, but the bot no longer uses it. See [the arbitrage contract](/arbitrage/contract/#covenarb-deprecated).
 
 ## What it is
 
-`CovenArb` executes a fixed list of swap legs inside a single Uniswap v4 lock, so the PoolManager is the flash-loan source and no leg needs upfront capital. A plan is a literal instruction list produced off chain by the solver; the contract makes no routing decisions. Two legs cover a v3 to v4 spread, three cover a triangle. The contract never holds a token between transactions, and it pays out only the realized profit.
+`CovenProbe` takes a list of routes. For each route it checks the pools' live prices, sizes the trade on-chain, runs the swaps inside a single Uniswap v4 lock and settles. The PoolManager is the flash-loan source, so no leg needs upfront capital and the contract never holds a token between transactions. A route with no gap, or whose trade no longer pays, returns 0 instead of reverting, so a send that arrives too late costs little gas. Anyone can call it; the caller keeps the profit, less a 10% fee.
 
-Net profit is the only number that decides anything, and it means the USDC you end up holding: expected output minus gas. Gas is USDC on Arc, so that subtraction is exact rather than a currency estimate.
+Net profit is the only number that decides anything, and it means the USDC you end up holding: profit minus gas. Gas is USDC on Arc, so that subtraction is exact rather than a currency estimate.
 
 ## What the measurement found
 
-Before writing the executor we measured the live chain. Two results matter for anyone deciding whether to run this.
+A week of Arc data (5–12 October 2026) held about $11,600 of closed-cycle arbitrage. Four findings shaped the design.
 
-Arc orders transactions within a block by descending priority fee. Over a sample of a few hundred blocks, almost every block was sorted that way, across hundreds of distinct fee values. Arc runs a priority auction, not arrival order. Winning a contested opportunity means out-bidding on priority fee, not arriving first. A reverted attempt costs about 0.007 USDC, so losing a race is cheap, but a crowded opportunity still produces one winner and many gas bills. The viable target is the long tail of launchpad pools that nobody fast is watching.
+- **Arc orders transactions by descending priority fee.** Blocks come every 0.5 s, the base fee sits at 20 gwei, and there is no visible mempool.
+- **Bidding gives the profit away.** Bots that reacted to a swap and bid priority fees won many contested races, but paid a median 81% of what they won in fees. Bots that sent at zero priority fee, and only when their contract found a profit, kept most of theirs.
+- **Probing every block is too expensive for most routes.** The two largest operators send one transaction per block whether or not there is anything to take. At 88k gas that is about $300 a day, nearly all of what is left for anyone else: excluding each route's largest single win, about $350 a day went to someone other than them.
+- **The largest repeatable source was a fair-launch hook.** Some v4 hooks collect swap fees in the pool's token and sell them to the next swapper at the pool price. Buying that inventory and selling it back is profitable whenever enough has built up, and two operators harvest it within a block or two.
 
-On the public endpoint the observable opportunity set was close to empty. Launchpad tokens exist in large numbers, but most have a single USDC pool or duplicate pools with no liquidity, so there is nothing to arbitrage against. A real assessment needs a private endpoint and several days of collection. Run the measurement yourself before risking gas.
+So the bot simulates every candidate route through `CovenProbe` once per block, which costs nothing, and sends only what pays for its gas, at zero priority fee. In a 20-hour simulation in October 2026, that strategy netted $4.00 when sends landed in the block after the gap appeared, and lost $0.59 when they landed a block later. Latency decides the result.
 
-Since then, competing bots have appeared. In a sample of about 50 minutes in October 2026, two contracts made over 30 closed-cycle trades between them. The faster one reacted within a block and bid around 20 gwei of priority fee on small trades, and 746 gwei on a three-leg trade that netted it 0.18 USDC. Speed and bid now matter as much as finding the opportunity.
+## How a route is priced
 
-## The solver
+Within a tick range a pool is constant product with virtual reserves, so a cycle's best trade size can be estimated in closed form. That estimate only decides which cycles are worth simulating. It cannot see tick crossings, thin liquidity just past the current range, or fees a hook charges.
 
-Within a tick range a pool is constant product with virtual reserves, so a cycle's best trade size can be estimated in closed form. That estimate is only a starting point. It cannot see tick crossings, thin liquidity just past the current range, or fees a hook charges, and a wide gap on a pool holding a few dollars is not a few dollars of profit.
-
-The chain decides instead. `CovenArb` reverts with `BelowMinProfit(profit, minProfit)` when a plan is profitable but under its floor, so a plan with an unreachable floor returns its exact profit after every tick, hook and fee, including the contract's own cut. The solver simulates sixteen sizes around the estimate in a single Multicall3 call and takes the best. Nothing is sent that the chain has not priced.
+The chain decides instead. A simulated call to `CovenProbe.probe` runs the real trade against the latest block, so the profit it returns is exact after every tick, hook and fee, including the contract's own cut. A two-leg cycle is sized on-chain: the first swap stops at the price where both pools' fee-adjusted prices meet, and the pool handles tick crossings itself. Every candidate goes into one round of calls per block, and nothing is sent that the chain has not priced.
 
 `CovenLens` is not used for discovery. It only knows hookless pools at standard fee tiers, which leaves out most of what trades on Arc. Pools are found from swap events instead, as described in [the CLI](/arbitrage/cli/#how-a-trade-is-found).
 
 ## Contracts
 
-`CovenArb` is deployed separately from the retail contracts, at `0xFFAEFEA08cD27e9f0CA6A7e7ce3047e924cb663e`. See [the arbitrage contract](/arbitrage/contract/) for the execution flow and the checks that protect the callback. The command line tool that runs the solver is described in [the CLI](/arbitrage/cli/).
+`CovenProbe` is deployed at `0x179606809c8611BebFAC04357f0B4E0Fb8b6479E`. See [the arbitrage contract](/arbitrage/contract/) for the execution flow and the checks that protect it. The command line tool that runs the bot is described in [the CLI](/arbitrage/cli/).
