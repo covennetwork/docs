@@ -20,7 +20,7 @@ export default defineConfig({
         },
         {
           label: 'Integrating',
-          items: ['guides/widget', 'guides/integrators', 'guides/fees', 'guides/production'],
+          items: ['guides/kit', 'guides/widget', 'guides/integrators', 'guides/fees', 'guides/production'],
         },
         {
           label: 'Arbitrage',

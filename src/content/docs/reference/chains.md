@@ -3,6 +3,8 @@ title: Chains
 description: Where USDC can come from and go to, and where gas can be paid in USDC.
 ---
 
+The [kit](/guides/kit/) connects wallets on every EVM mainnet viem ships, more than 390 chains, with Arc as the default; swaps and balances work wherever the wallet is. This page covers the chains USDC can move between.
+
 Coven bridges USDC between Arc and ten chains, in both directions, using Circle's CCTP with the Forwarding Service.
 
 | Chain | Chain ID | CCTP domain | Gasless deposits |
@@ -34,3 +36,7 @@ Fast transfers settle in seconds to a few minutes and pay a small Circle fee. St
 ## Swapping and bridging together
 
 Leaving Arc, a swap into USDC and the bridge happen in one transaction. Arriving, the USDC lands on Arc where it also pays for gas, so a swap right after costs nothing extra to set up.
+
+## Paying with USDC from another chain
+
+In the [kit](/guides/kit/) and the [widget](/guides/widget/), USDC on any chain above can pay for an Arc token directly. The wallet is asked to switch to that chain to send, and to Arc to buy, in that order. Only the USDC that arrived is spent on the swap.
